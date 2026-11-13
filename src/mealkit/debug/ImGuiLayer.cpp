@@ -16,17 +16,19 @@ namespace {
 void applyStyle(float scale) {
     ImGui::StyleColorsDark();
     ImGuiStyle& s = ImGui::GetStyle();
+    // Spectrum 2 shape (engine docs/TOOL_DESIGN.md 3.1): 8 px fields, 10 px panels and popups.
     // Panels are separated by space and a darker gutter, not by lines
-    s.WindowRounding = 6.0f;
-    s.ChildRounding = 4.0f;
-    s.PopupRounding = 6.0f;
-    s.FrameRounding = 4.0f;
-    s.GrabRounding = 3.0f;
-    s.TabRounding = 4.0f;
+    s.WindowRounding = 10.0f;
+    s.ChildRounding = 10.0f;
+    s.PopupRounding = 10.0f;
+    s.FrameRounding = 8.0f;
+    s.GrabRounding = 4.0f;
+    s.TabRounding = 8.0f;
     s.ScrollbarRounding = 6.0f;
     s.ScrollbarSize = 10.0f;
-    s.WindowBorderSize = 1.0f;
-    s.ChildBorderSize = 1.0f;
+    s.WindowBorderSize = 0.0f; // layers are told apart by color, not outlines
+    s.ChildBorderSize = 0.0f;
+    s.FrameBorderSize = 0.0f;
     s.PopupBorderSize = 1.0f;
     s.TabBarBorderSize = 0.0f;
     s.TabBarOverlineSize = 0.0f;
@@ -41,22 +43,22 @@ void applyStyle(float scale) {
     s.CellPadding = ImVec2(6.0f, 3.0f);
     s.IndentSpacing = 16.0f;
     s.WindowMenuButtonPosition = ImGuiDir_None; // no triangle on every dock tab bar: tabs are all visible and can be dragged
-    // Tokens of engine docs/TOOL_DESIGN.md 3.1: Radix slateDark (gray 1..12) and blueDark. Pick a step by its job, never a color by eye
+    // Tokens of engine docs/TOOL_DESIGN.md 3.1: Spectrum 2 dark gray-25..gray-900 (gray 1..12) and blue. Pick a step by its job, never a color by eye
     const auto rgb = [](u32 v, f32 a = 1.0f) {
         return ImVec4(((v >> 16) & 0xFF) / 255.0f, ((v >> 8) & 0xFF) / 255.0f, (v & 0xFF) / 255.0f, a);
     };
     const auto gray = [&](int step) {
-        static constexpr u32 kSlate[13] = {0, 0x111113, 0x18191B, 0x212225, 0x272A2D, 0x2E3135, 0x363A3F,
-                                           0x43484E, 0x5A6169, 0x696E77, 0x777B84, 0xB0B4BA, 0xEDEEF0};
-        return rgb(kSlate[step]);
+        static constexpr u32 kGray[13] = {0, 0x111111, 0x1B1B1B, 0x222222, 0x2C2C2C, 0x323232, 0x393939,
+                                          0x444444, 0x6D6D6D, 0x8A8A8A, 0x909090, 0xAFAFAF, 0xEBEBEB};
+        return rgb(kGray[step]);
     };
     const ImVec4 clear(0.0f, 0.0f, 0.0f, 0.0f);
-    const ImVec4 blue8 = rgb(0x2870BD); // focus, selection
-    const ImVec4 blue9 = rgb(0x0090FF); // primary button, check marks
+    const ImVec4 focus = rgb(0x5D89FF);  // keyboard focus, hovered splitters
+    const ImVec4 accent = rgb(0x3B63FB); // selection, check marks, active grabs
     ImVec4* c = s.Colors;
     c[ImGuiCol_Text] = gray(12);
     c[ImGuiCol_TextDisabled] = gray(11); // secondary text: paths, dates, hints
-    c[ImGuiCol_TextSelectedBg] = rgb(0x2870BD, 0.45f);
+    c[ImGuiCol_TextSelectedBg] = rgb(0x3B63FB, 0.45f);
     c[ImGuiCol_WindowBg] = gray(2);
     c[ImGuiCol_ChildBg] = clear;
     c[ImGuiCol_PopupBg] = gray(3);
@@ -67,24 +69,24 @@ void applyStyle(float scale) {
     c[ImGuiCol_TitleBgActive] = gray(1);
     c[ImGuiCol_TitleBgCollapsed] = gray(1);
     // Hover is one neutral step up, pressed and selected one more; the accent never fills a hovered control
-    c[ImGuiCol_FrameBg] = gray(3);
-    c[ImGuiCol_FrameBgHovered] = gray(4);
-    c[ImGuiCol_FrameBgActive] = gray(5);
+    c[ImGuiCol_FrameBg] = gray(4); // fields and buttons share a step, so a combo and its arrow read as one control
+    c[ImGuiCol_FrameBgHovered] = gray(5);
+    c[ImGuiCol_FrameBgActive] = gray(6);
     c[ImGuiCol_Header] = gray(5);
     c[ImGuiCol_HeaderHovered] = gray(4);
     c[ImGuiCol_HeaderActive] = gray(6);
-    c[ImGuiCol_Button] = gray(3);
-    c[ImGuiCol_ButtonHovered] = gray(4);
-    c[ImGuiCol_ButtonActive] = gray(5);
-    c[ImGuiCol_CheckMark] = blue9;
-    c[ImGuiCol_SliderGrab] = gray(8);
-    c[ImGuiCol_SliderGrabActive] = blue9;
-    c[ImGuiCol_Separator] = gray(6);
-    c[ImGuiCol_SeparatorHovered] = blue8;
-    c[ImGuiCol_SeparatorActive] = blue9;
+    c[ImGuiCol_Button] = gray(4);
+    c[ImGuiCol_ButtonHovered] = gray(6);
+    c[ImGuiCol_ButtonActive] = gray(7);
+    c[ImGuiCol_CheckMark] = accent;
+    c[ImGuiCol_SliderGrab] = gray(9);
+    c[ImGuiCol_SliderGrabActive] = accent;
+    c[ImGuiCol_Separator] = gray(5);
+    c[ImGuiCol_SeparatorHovered] = focus;
+    c[ImGuiCol_SeparatorActive] = accent;
     c[ImGuiCol_ResizeGrip] = clear;
-    c[ImGuiCol_ResizeGripHovered] = blue8;
-    c[ImGuiCol_ResizeGripActive] = blue9;
+    c[ImGuiCol_ResizeGripHovered] = focus;
+    c[ImGuiCol_ResizeGripActive] = accent;
     c[ImGuiCol_ScrollbarBg] = clear;
     c[ImGuiCol_ScrollbarGrab] = gray(6);
     c[ImGuiCol_ScrollbarGrabHovered] = gray(7);
@@ -97,13 +99,13 @@ void applyStyle(float scale) {
     c[ImGuiCol_TabDimmed] = clear;
     c[ImGuiCol_TabDimmedSelected] = gray(2);
     c[ImGuiCol_TabDimmedSelectedOverline] = clear;
-    c[ImGuiCol_TableHeaderBg] = gray(3);
+    c[ImGuiCol_TableHeaderBg] = clear; // no header band: quiet header text over a line
     c[ImGuiCol_TableBorderStrong] = gray(6);
     c[ImGuiCol_TableBorderLight] = gray(5);
-    c[ImGuiCol_TableRowBgAlt] = ImVec4(1.0f, 1.0f, 1.0f, 0.015f);
-    c[ImGuiCol_DockingPreview] = rgb(0x2870BD, 0.5f);
+    c[ImGuiCol_TableRowBgAlt] = clear; // no zebra rows
+    c[ImGuiCol_DockingPreview] = rgb(0x3B63FB, 0.5f);
     c[ImGuiCol_DockingEmptyBg] = clear;
-    c[ImGuiCol_NavCursor] = blue8;
+    c[ImGuiCol_NavCursor] = focus;
     s.ScaleAllSizes(scale);
     s.FontScaleDpi = scale;
 }
